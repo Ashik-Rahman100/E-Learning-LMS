@@ -1,6 +1,7 @@
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
+import { ErrorMiddleware } from "./middleware/error";
 
 export const app = express();
 require("dotenv").config();
@@ -31,3 +32,6 @@ app.all("*", (req: Request, res: Response, next: NextFunction) => {
   err.statusCode = 400;
   next(err);
 });
+
+// add error handler middleware
+app.use(ErrorMiddleware);
