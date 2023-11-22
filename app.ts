@@ -2,6 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { ErrorMiddleware } from "./middleware/error";
+import userRouter from "./routes/user.route";
 
 export const app = express();
 require("dotenv").config();
@@ -16,7 +17,8 @@ app.use(
     origin: process.env.ORIGIN,
   })
 );
-
+// Routes
+app.use("/api/v1", userRouter);
 // Test Api
 app.get("/test", (req: Request, res: Response, next: NextFunction) => {
   // console.log(`Server is Running`);
