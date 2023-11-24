@@ -8,7 +8,7 @@ import { CatchAsyncError } from "./catchAsync";
 // Authenticated user
 export const isAuthenticated = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.cookies);
+    // console.log(req.cookies);
     const access_token = req.cookies.access_token as string;
 
     if (!access_token) {
