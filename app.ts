@@ -3,6 +3,7 @@ import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 import { ErrorMiddleware } from "./middleware/error";
 import courseRouter from "./routes/course.route";
+import orderRouter from "./routes/order.route";
 import userRouter from "./routes/user.route";
 
 export const app = express();
@@ -21,6 +22,8 @@ app.use(
 // Routes
 app.use("/api/v1", userRouter);
 app.use("/api/v1", courseRouter);
+app.use("/api/v1", orderRouter);
+
 // Test Api
 app.get("/test", (req: Request, res: Response, next: NextFunction) => {
   // console.log(`Server is Running`);
