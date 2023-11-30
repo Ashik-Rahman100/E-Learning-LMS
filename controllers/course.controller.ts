@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import path from "path";
 import { CatchAsyncError } from "../middleware/catchAsync";
 import CourseModel from "../models/course.model";
+import NotificationModel from "../models/notification.model";
 import { createCourse } from "../services/course.service";
 import ErrorHandler from "../utils/ErrorHandler";
 import { redis } from "../utils/redis";
@@ -193,6 +194,13 @@ export const addQuestion = CatchAsyncError(
       // add this question to our course content
       courseContent.question.push(newQuestion);
 
+      // Add question notification
+      await NotificationModel.create({
+        user: req.user?._id,
+        title: "New Question Received",
+        message: `You have a new Question ${courseContent?.title}`,
+      });
+
       // save the updated course
       await course?.save();
 
@@ -253,6 +261,12 @@ export const answerQuestion = CatchAsyncError(
 
       if (req.user?._id === question.user._id) {
         // create a notification
+        // Add question notification
+        await NotificationModel.create({
+          user: req.user?._id,
+          title: "New Question Reply Received",
+          message: `You have a new Question ${courseContent?.title}`,
+        });
       } else {
         const data = {
           name: question?.user?.name,
