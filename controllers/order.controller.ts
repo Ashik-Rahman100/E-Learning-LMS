@@ -1,5 +1,6 @@
 import ejs from "ejs";
 import { NextFunction, Request, Response } from "express";
+import cron from "node-cron";
 import path from "path";
 import { CatchAsyncError } from "../middleware/catchAsync";
 import CourseModel from "../models/course.model";
@@ -17,7 +18,7 @@ export const createOrder = CatchAsyncError(
 
       const user = await userModel.findById(req.user?._id);
 
-      const courseExistUser = user?.courses.find(
+      const courseExistUser = user?.courses.some(
         (course: any) => course._id.toString() === courseId
       );
       if (courseExistUser) {
@@ -36,9 +37,7 @@ export const createOrder = CatchAsyncError(
         userId: user?._id,
         payment_info,
       };
-
-      newOrder(data, res, next);
-
+      // newOrder(data,res,next)
       const mailData = {
         order: {
           _id: course._id.toString().slice(0, 6),
@@ -80,13 +79,24 @@ export const createOrder = CatchAsyncError(
         message: `You have a new order from ${course?.name}`,
       });
 
-      course.purchased ? (course.purchased += 1) : course.purchased;
+      // console.log("create order ==> ", course.purchased);
+      course.purchased ? (course.purchased += 1) : (course.purchased = 1);
 
       await course.save();
-
       newOrder(data, res, next);
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
   }
 );
+
+// Delete notification only --admin
+cron.schedule("0 0 0 * * *", () => {
+  // console.log('running a task every minute');
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  NotificationModel.deleteMany({
+    status: "read",
+    createdAt: { $lt: thirtyDaysAgo },
+  });
+  console.log("Delete read notification");
+});
