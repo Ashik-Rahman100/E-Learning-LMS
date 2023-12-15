@@ -1,13 +1,12 @@
 import ejs from "ejs";
 import { NextFunction, Request, Response } from "express";
-import cron from "node-cron";
 import path from "path";
 import { CatchAsyncError } from "../middleware/catchAsync";
 import CourseModel from "../models/course.model";
 import NotificationModel from "../models/notification.model";
 import { IOrder } from "../models/order.model";
 import userModel from "../models/user.model";
-import { newOrder } from "../services/order.service";
+import { getAllOrdersService, newOrder } from "../services/order.service";
 import ErrorHandler from "../utils/ErrorHandler";
 import sendMail from "../utils/sendMail";
 
@@ -90,13 +89,13 @@ export const createOrder = CatchAsyncError(
   }
 );
 
-// Delete notification only --admin
-cron.schedule("0 0 0 * * *", () => {
-  // console.log('running a task every minute');
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  NotificationModel.deleteMany({
-    status: "read",
-    createdAt: { $lt: thirtyDaysAgo },
-  });
-  console.log("Delete read notification");
-});
+// Get All Course for ---- admin
+export const getAllOrders = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      getAllOrdersService(res);
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);

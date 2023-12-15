@@ -6,7 +6,7 @@ import path from "path";
 import { CatchAsyncError } from "../middleware/catchAsync";
 import CourseModel from "../models/course.model";
 import NotificationModel from "../models/notification.model";
-import { createCourse } from "../services/course.service";
+import { createCourse, getAllCoursesService } from "../services/course.service";
 import ErrorHandler from "../utils/ErrorHandler";
 import { redis } from "../utils/redis";
 import sendMail from "../utils/sendMail";
@@ -409,6 +409,39 @@ export const addReplyReview = CatchAsyncError(
       });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
+// Get All Course for ---- admin
+export const getAllUsers = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      getAllCoursesService(res);
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+// Delete Course only for --admin
+export const deleteCourse = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const course = await CourseModel.findById(id);
+      if (!course) {
+        return new ErrorHandler("Course not found", 404);
+      }
+      await course.deleteOne({ id });
+      redis.del(id);
+
+      res.status(200).json({
+        success: true,
+        message: "Course deleted successfully.",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
     }
   }
 );
