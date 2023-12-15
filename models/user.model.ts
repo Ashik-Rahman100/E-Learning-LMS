@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import mongoose, { Document, Model, Schema } from "mongoose";
 
 const emailRegexPattern: RegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export interface IUser extends Document {
   name: string;
   email: string;

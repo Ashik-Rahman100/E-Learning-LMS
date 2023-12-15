@@ -5,7 +5,8 @@ import mongoose from "mongoose";
 import path from "path";
 import { CatchAsyncError } from "../middleware/catchAsync";
 import CourseModel from "../models/course.model";
-import { createCourse } from "../services/course.service";
+import NotificationModel from "../models/notification.model";
+import { createCourse, getAllCoursesService } from "../services/course.service";
 import ErrorHandler from "../utils/ErrorHandler";
 import { redis } from "../utils/redis";
 import sendMail from "../utils/sendMail";
@@ -193,6 +194,13 @@ export const addQuestion = CatchAsyncError(
       // add this question to our course content
       courseContent.question.push(newQuestion);
 
+      // Add question notification
+      await NotificationModel.create({
+        user: req.user?._id,
+        title: "New Question Received",
+        message: `You have a new Question ${courseContent?.title}`,
+      });
+
       // save the updated course
       await course?.save();
 
@@ -253,6 +261,12 @@ export const answerQuestion = CatchAsyncError(
 
       if (req.user?._id === question.user._id) {
         // create a notification
+        // Add question notification
+        await NotificationModel.create({
+          user: req.user?._id,
+          title: "New Question Reply Received",
+          message: `You have a new Question ${courseContent?.title}`,
+        });
       } else {
         const data = {
           name: question?.user?.name,
@@ -395,6 +409,39 @@ export const addReplyReview = CatchAsyncError(
       });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
+// Get All Course for ---- admin
+export const getAllUsers = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      getAllCoursesService(res);
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+// Delete Course only for --admin
+export const deleteCourse = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const course = await CourseModel.findById(id);
+      if (!course) {
+        return new ErrorHandler("Course not found", 404);
+      }
+      await course.deleteOne({ id });
+      redis.del(id);
+
+      res.status(200).json({
+        success: true,
+        message: "Course deleted successfully.",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
     }
   }
 );
